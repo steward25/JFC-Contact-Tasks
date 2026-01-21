@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1007928859281",
+    "project_id": "sign-in-authenticator-c48e5",
+    "storage_bucket": "sign-in-authenticator-c48e5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1007928859281:android:b5b01ad1a4fc8553d9fd30",
+        "android_client_info": {
+          "package_name": "com.stewardapostol.jfc"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDMbnLJHpan2qq2b51DrDULVrx8jNpyXbI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
