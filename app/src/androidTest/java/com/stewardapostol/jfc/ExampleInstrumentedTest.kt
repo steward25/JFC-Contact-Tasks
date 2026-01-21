@@ -1,4 +1,4 @@
-package com.stewardapostol.contacttaskmanager
+package com.stewardapostol.jfc
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

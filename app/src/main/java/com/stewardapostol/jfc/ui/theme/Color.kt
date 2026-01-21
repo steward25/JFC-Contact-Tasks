@@ -1,4 +1,4 @@
-package com.stewardapostol.contacttaskmanager.ui.theme
+package com.stewardapostol.jfc.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

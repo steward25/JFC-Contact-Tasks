@@ -1,4 +1,4 @@
-package com.stewardapostol.contacttaskmanager
+package com.stewardapostol.jfc
 
 import org.junit.Test
 
