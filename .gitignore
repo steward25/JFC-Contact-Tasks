@@ -13,3 +13,22 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Android Studio / IntelliJ
+.idea/
+.gradle/
+build/
+**/build/
+*.iml
+local.properties
+
+# Secrets (DO NOT PUSH THESE)
+#google-services.json
+.DS_Store
+
+# System files
+captures/
+.externalNativeBuild/
+.cxx/
+
+
