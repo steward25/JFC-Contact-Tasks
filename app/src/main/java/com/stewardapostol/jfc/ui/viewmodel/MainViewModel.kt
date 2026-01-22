@@ -2,6 +2,7 @@ package com.stewardapostol.jfc.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.stewardapostol.jfc.data.local.Business
 import com.stewardapostol.jfc.data.local.BusinessWithDetails
 import com.stewardapostol.jfc.data.local.Category
@@ -12,6 +13,7 @@ import com.stewardapostol.jfc.data.local.Task
 import com.stewardapostol.jfc.data.local.TaskWithNames
 import com.stewardapostol.jfc.data.repository.AppRepository
 import com.stewardapostol.jfc.ui.utils.ColorGenerator
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -20,6 +22,20 @@ import kotlinx.coroutines.launch
 class  MainViewModel(private val repository: AppRepository) : ViewModel() {
 
 
+    private val _userEmail = MutableStateFlow("")
+    val userEmail: StateFlow<String> = _userEmail
+
+    private val _userName = MutableStateFlow("")
+    val userName: StateFlow<String> = _userName
+
+    fun loadUserData() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.let {
+            _userEmail.value = it.email ?: "No Email"
+            // If you stored the name in DisplayName during registration:
+            _userName.value = it.displayName ?: "User"
+        }
+    }
     // Observe the detailed list for the UI
     val peopleList: StateFlow<List<PersonWithDetails>> = repository.allPeopleWithDetails
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

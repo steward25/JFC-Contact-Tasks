@@ -2,11 +2,9 @@ package com.stewardapostol.jfc.ui.screen
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -23,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,15 +32,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.stewardapostol.jfc.R
 import androidx.compose.material3.*
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.stewardapostol.jfc.ui.viewmodel.JWTAuthViewModel
+import com.stewardapostol.jfc.ui.viewmodel.MainViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopHeaderBar(
     authViewModel: JWTAuthViewModel,
+    mainViewModel: MainViewModel,
     onLogout: () -> Unit,
     onUpdateProfile: () -> Unit,
     onChangePassword: () -> Unit
@@ -51,8 +51,12 @@ fun TopHeaderBar(
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        mainViewModel.loadUserData()
+    }
+
     // Extract first name from Firebase Display Name
-    val fullName = authViewModel.currentUserName ?: "User"
+    val fullName = mainViewModel.userName.value ?: "User"
     val firstName = fullName.split(" ").firstOrNull() ?: "User"
 
     TopAppBar(

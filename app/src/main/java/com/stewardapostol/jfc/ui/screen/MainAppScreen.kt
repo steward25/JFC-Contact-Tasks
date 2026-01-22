@@ -60,6 +60,7 @@ fun MainAppScreen(mainViewModel: MainViewModel, authViewModel: JWTAuthViewModel,
         topBar = {
             TopHeaderBar(
                 authViewModel = authViewModel,
+                mainViewModel = mainViewModel,
                 onLogout = onNavigateToAuth,
                 onUpdateProfile = { showUpdateProfileDialog = true },
                 onChangePassword = { showChangePasswordDialog = true }

@@ -157,7 +157,7 @@ class JWTAuthViewModel(application: Application) : ViewModel() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     _isLoggedIn.value = true
-                    fetchJwt()
+                    fetchJwt() // fetchJwt will set _loginSuccess to true once token is ready
                 } else {
                     _isLoading.value = false
                     _loginState.value = "Login Failed: ${task.exception?.message}"

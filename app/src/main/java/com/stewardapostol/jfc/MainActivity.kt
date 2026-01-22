@@ -42,9 +42,6 @@ class MainActivity : ComponentActivity() {
                     }
                 })
 
-                // 2. Initialize the MainViewModel using the factory we created earlier
-                mainViewModel = viewModel(factory = MainViewModelFactory(repository))
-
                 val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
                 val navController = rememberNavController()
 
@@ -66,6 +63,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         )
+                        mainViewModel = viewModel(factory = MainViewModelFactory(repository))
                     }
                 }
             }
