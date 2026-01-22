@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -24,6 +25,7 @@ import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -56,7 +58,18 @@ fun <T> ManagementSectionWithData(
         ) {
             Text(title, style = MaterialTheme.typography.titleLarge)
             IconButton(onClick = onAddClick) {
-                Icon(Icons.Default.Add, contentDescription = "Add")
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
             }
         }
 
@@ -77,16 +90,6 @@ fun <T> ManagementSectionWithData(
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Medium
                         )
-                    },
-                    colors = if (itemColor != null) {
-                        InputChipDefaults.inputChipColors(
-                            containerColor = itemColor.copy(alpha = 0.15f),
-                            labelColor = itemColor.copy(alpha = 1f),
-                            leadingIconColor = itemColor.copy(alpha = 1f),
-                            trailingIconColor = itemColor.copy(alpha = 0.7f)
-                        )
-                    } else {
-                        InputChipDefaults.inputChipColors()
                     },
                     leadingIcon = {
                         if (title == Routes.TAGS) {

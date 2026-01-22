@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.stewardapostol.jfc"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -65,10 +65,8 @@ dependencies {
     implementation(libs.firebase.auth)
 
     // Room
-    // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
-    // REMOVE: annotationProcessor(libs.room.compiler)
     ksp(libs.room.compiler)
 
     // Dependency Injection

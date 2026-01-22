@@ -57,7 +57,15 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     composable(Routes.MANAGEMENT) {
-                        MainAppScreen(mainViewModel = mainViewModel, authViewModel = authViewModel)
+                        MainAppScreen(
+                            mainViewModel = mainViewModel,
+                            authViewModel = authViewModel,
+                            onNavigateToAuth = {
+                                navController.navigate(Routes.AUTH) {
+                                    popUpTo(Routes.MANAGEMENT) { inclusive = true }
+                                }
+                            }
+                        )
                     }
                 }
             }

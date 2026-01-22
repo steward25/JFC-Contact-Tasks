@@ -3,6 +3,7 @@ package com.stewardapostol.jfc.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Firebase
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.userProfileChangeRequest
@@ -24,12 +25,97 @@ class JWTAuthViewModel(application: Application) : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
+    val currentUserEmail = auth.currentUser?.email
+    val currentUserName = auth.currentUser?.displayName
     private val _idToken = MutableStateFlow<String?>(null)
     val idToken = _idToken.asStateFlow()
 
     fun checkLoggedInStatus() {
         _isLoggedIn.value = auth.currentUser != null
         if (_isLoggedIn.value) fetchJwt()
+    }
+
+    fun clearLoginState() {
+        _loginState.value = ""
+    }
+
+    // --- 1. UPDATE PROFILE (Name/Email) ---
+    fun updateProfile(newName: String, newEmail: String) {
+        val user = auth.currentUser ?: return
+        _isLoading.value = true
+
+        // Update Display Name
+        val profileUpdates = userProfileChangeRequest {
+            displayName = newName
+        }
+
+        user.updateProfile(profileUpdates).addOnCompleteListener { nameTask ->
+            if (nameTask.isSuccessful) {
+                // Update Email (Note: Firebase may require re-authentication for this)
+                user.updateEmail(newEmail).addOnCompleteListener { emailTask ->
+                    _isLoading.value = false
+                    if (emailTask.isSuccessful) {
+                        _loginState.value = "Profile updated successfully!"
+                    } else {
+                        _loginState.value = "Email update failed: ${emailTask.exception?.message}"
+                    }
+                }
+            } else {
+                _isLoading.value = false
+                _loginState.value = "Name update failed."
+            }
+        }
+    }
+
+    // --- 2. UPDATE PASSWORD ---
+    fun updatePassword(currentPass: String, newPass: String) {
+        val user = auth.currentUser ?: return
+        _isLoading.value = true
+
+        val credential = EmailAuthProvider.getCredential(user.email!!, currentPass)
+
+        user.reauthenticate(credential).addOnCompleteListener { reAuthTask ->
+            if (reAuthTask.isSuccessful) {
+                user.updatePassword(newPass).addOnCompleteListener { passTask ->
+                    _isLoading.value = false
+                    if (passTask.isSuccessful) {
+                        _loginState.value = "SUCCESS_PASSWORD_UPDATED"
+                        // Use a unique string to trigger specific UI logic
+                    } else {
+                        _loginState.value = "Error: ${passTask.exception?.message}"
+                    }
+                }
+            } else {
+                _isLoading.value = false
+                _loginState.value = "Current password incorrect."
+            }
+        }
+    }
+
+    // --- 3. DELETE ACCOUNT ---
+    fun deleteAccount(password: String, onDeleted: () -> Unit) {
+        val user = auth.currentUser ?: return
+        _isLoading.value = true
+
+        // Re-authenticate before sensitive operation
+        val credential = EmailAuthProvider.getCredential(user.email!!, password)
+
+        user.reauthenticate(credential).addOnCompleteListener { reAuthTask ->
+            if (reAuthTask.isSuccessful) {
+                user.delete().addOnCompleteListener { deleteTask ->
+                    _isLoading.value = false
+                    if (deleteTask.isSuccessful) {
+                        logout()
+                        onDeleted()
+                    } else {
+                        _loginState.value = "Account deletion failed."
+                    }
+                }
+            } else {
+                _isLoading.value = false
+                _loginState.value = "Incorrect password for deletion."
+            }
+        }
     }
 
     /**
@@ -71,7 +157,7 @@ class JWTAuthViewModel(application: Application) : ViewModel() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     _isLoggedIn.value = true
-                    fetchJwt() // fetchJwt will set _loginSuccess to true once token is ready
+                    fetchJwt()
                 } else {
                     _isLoading.value = false
                     _loginState.value = "Login Failed: ${task.exception?.message}"
