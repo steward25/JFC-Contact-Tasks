@@ -17,7 +17,7 @@ object Routes {
     const val TASKS = "tasks"
 
 
-    const val ADD_TASKS = "add_tasks"
+    const val PROFILE = "profile"
 
 
 }

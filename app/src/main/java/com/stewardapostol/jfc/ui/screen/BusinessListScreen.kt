@@ -1,5 +1,6 @@
 package com.stewardapostol.jfc.ui.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Tag
@@ -22,20 +22,24 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.stewardapostol.jfc.data.local.Business
 import com.stewardapostol.jfc.data.local.BusinessWithDetails
+import com.stewardapostol.jfc.data.local.TaskWithNames
 import com.stewardapostol.jfc.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -44,30 +48,45 @@ fun BusinessListScreen(
     viewModel: MainViewModel,
     onEditBusiness: (BusinessWithDetails) -> Unit,
 ) {
+    val allTasks by viewModel.allTasks.collectAsState(initial = emptyList())
     val businesses by viewModel.allBusinessesWithDetails.collectAsState(initial = emptyList())
+    var selectedBusinessTasks by remember { mutableStateOf<List<TaskWithNames>?>(null) }
+    var selectedBusinessName by remember { mutableStateOf("") }
 
-    Scaffold() { padding ->
-        if (businesses.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No businesses found. Add one to get started.")
+    if (businesses.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("No businesses found. Add one to get started.")
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                top = 32.dp,
+                end = 16.dp,
+                bottom = 32.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(businesses, key = { it.business.businessId }) { detail ->
+                BusinessItemCard(
+                    detail = detail,
+                    onEdit = { onEditBusiness(detail) },
+                    onDelete = { viewModel.onDeleteBusiness(detail.business) },
+                    onHistoryClick = { clickedBusiness ->
+                        selectedBusinessName = clickedBusiness.business.name
+                        selectedBusinessTasks = allTasks.filter { it.businessName == clickedBusiness.business.name }
+                    }
+                )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(businesses, key = { it.business.businessId }) { detail ->
-                    BusinessItemCard(
-                        detail = detail,
-                        // Pass the whole detail object here
-                        onEdit = { onEditBusiness(detail) },
-                        onDelete = { viewModel.onDeleteBusiness(detail.business) }
-                    )
-                }
-            }
+        }
+        selectedBusinessTasks?.let { taskList ->
+            TaskHistoryDialog(
+                title = selectedBusinessName,
+                tasks = taskList,
+                onDismiss = { selectedBusinessTasks = null }
+            )
         }
     }
 }
@@ -77,11 +96,13 @@ fun BusinessListScreen(
 fun BusinessItemCard(
     detail: BusinessWithDetails,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onHistoryClick: (BusinessWithDetails) -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(2.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onHistoryClick(detail) },
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -101,9 +122,7 @@ fun BusinessItemCard(
                     IconButton(onClick = onEdit) {
                         Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
                     }
-                    IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
-                    }
+                    IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, "Delete", tint = Color.Red) }
                 }
             }
 

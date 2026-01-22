@@ -1,5 +1,6 @@
 package com.stewardapostol.jfc.ui.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,41 +32,63 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.stewardapostol.jfc.data.local.PersonWithDetails
+import com.stewardapostol.jfc.data.local.Task
+import com.stewardapostol.jfc.data.local.TaskWithNames
 import com.stewardapostol.jfc.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PeopleListScreen(
     viewModel: MainViewModel,
-    onEditPerson: (PersonWithDetails) -> Unit // Pass the detail DTO for editing
+    onEditPerson: (PersonWithDetails) -> Unit
 ) {
     // 1. Observe the detailed list from ViewModel
-    val people by viewModel.allPeopleWithDetails .collectAsState(initial = emptyList())
+    val allTasks by viewModel.allTasks.collectAsState(initial = emptyList())
+    val people by viewModel.allPeopleWithDetails.collectAsState(initial = emptyList())
+    var selectedEntityTasks by remember { mutableStateOf<List<TaskWithNames>?>(null) }
+    var selectedName by remember { mutableStateOf("") }
 
-    Scaffold { padding ->
-        if (people.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No people found.")
+    if (people.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("No people found.")
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                top = 32.dp,
+                end = 16.dp,
+                bottom = 32.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(people, key = { it.person.personId }) { detail ->
+                PersonItemCard(
+                    detail = detail,
+                    onEdit = { onEditPerson(detail) },
+                    onDelete = { viewModel.onDeletePerson(detail.person.personId) },
+                    onHistoryClick = { clickedDetail ->
+                        selectedName = "${clickedDetail.person.firstName} ${clickedDetail.person.lastName}"
+                        selectedEntityTasks = allTasks.filter { it.task.relatedPersonId == clickedDetail.person.personId }
+                    }
+                )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier.padding(padding).fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(people, key = { it.person.personId }) { detail ->
-                    PersonItemCard(
-                        detail = detail,
-                        onEdit = { onEditPerson(detail) },
-                        onDelete = { viewModel.onDeletePerson(detail.person.personId) }
-                    )
-                }
-            }
+        }
+        selectedEntityTasks?.let { tasksList ->
+            TaskHistoryDialog(
+                title = selectedName,
+                tasks = tasksList,
+                onDismiss = { selectedEntityTasks = null }
+            )
         }
     }
 }
@@ -74,11 +97,14 @@ fun PeopleListScreen(
 fun PersonItemCard(
     detail: PersonWithDetails,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onHistoryClick: (PersonWithDetails) -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(2.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onHistoryClick(detail) },
+        elevation = CardDefaults.cardElevation(2.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

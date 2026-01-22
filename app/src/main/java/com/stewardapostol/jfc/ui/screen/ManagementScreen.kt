@@ -56,36 +56,36 @@ fun ManagementScreen(viewModel: MainViewModel) {
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
-        // --- Categories Section ---
-        ManagementSectionWithData(
-            title = Routes.BusinessCategories,
-            items = categories,
-            labelProvider = { it.categoryName },
-            colorProvider =  null ,
-            onAddClick = { showCategoryDialog = true },
-            onItemClick = { editingCategory = it },
-            onDeleteClick = { deletingCategory = it }
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            // --- Categories Section ---
+            ManagementSectionWithData(
+                title = Routes.BusinessCategories,
+                items = categories,
+                labelProvider = { it.categoryName },
+                colorProvider = null,
+                onAddClick = { showCategoryDialog = true },
+                onItemClick = { editingCategory = it },
+                onDeleteClick = { deletingCategory = it }
+            )
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
-        // --- Tags Section ---
-        ManagementSectionWithData(
-            title =  Routes.TAGS,
-            items = tags,
-            labelProvider = { it.tagName },
-            colorProvider = { it.color },
-            onAddClick = { showTagDialog = true },
-            onItemClick = { editingTag = it },
-            onDeleteClick = { deletingTag = it }
-        )
-    }
+            // --- Tags Section ---
+            ManagementSectionWithData(
+                title = Routes.TAGS,
+                items = tags,
+                labelProvider = { it.tagName },
+                colorProvider = { it.color },
+                onAddClick = { showTagDialog = true },
+                onItemClick = { editingTag = it },
+                onDeleteClick = { deletingTag = it }
+            )
+        }
     }
 
     // --- ADD DIALOGS ---
@@ -94,7 +94,8 @@ fun ManagementScreen(viewModel: MainViewModel) {
             viewModel.onAddCategory(
                 name = name,
                 onDuplicate = {
-                    Toast.makeText(context, "Category '$name' already exists!", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "Category '$name' already exists!", Toast.LENGTH_LONG)
+                        .show()
                 },
                 onSuccess = {
                     showCategoryDialog = false

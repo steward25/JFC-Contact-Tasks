@@ -1,16 +1,20 @@
 package com.stewardapostol.jfc.ui.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,7 +28,7 @@ import com.stewardapostol.jfc.ui.viewmodel.JWTAuthViewModel
 import com.stewardapostol.jfc.ui.viewmodel.MainViewModel
 
 @Composable
-fun MainAppScreen(mainViewModel: MainViewModel, authViewModel: JWTAuthViewModel) {
+fun MainAppScreen(mainViewModel: MainViewModel, authViewModel: JWTAuthViewModel, onNavigateToAuth: () -> Unit) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -38,8 +42,29 @@ fun MainAppScreen(mainViewModel: MainViewModel, authViewModel: JWTAuthViewModel)
 
     var showTaskDialog by remember { mutableStateOf(false) }
 
+    var showUpdateProfileDialog by remember { mutableStateOf(false) }
+    var showChangePasswordDialog by remember { mutableStateOf(false) }
+
+    val loginState by authViewModel.loginState.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(loginState) {
+        if (loginState == "SUCCESS_PASSWORD_UPDATED") {
+            Toast.makeText(context, "Security Alert: Password updated.", Toast.LENGTH_LONG).show()
+            authViewModel.clearLoginState()
+            showChangePasswordDialog = false
+        }
+    }
+
     Scaffold(
-        topBar = { TopHeaderBar(authViewModel) },
+        topBar = {
+            TopHeaderBar(
+                authViewModel = authViewModel,
+                onLogout = onNavigateToAuth,
+                onUpdateProfile = { showUpdateProfileDialog = true },
+                onChangePassword = { showChangePasswordDialog = true }
+            )
+        },
         bottomBar = { BottomBar(currentRoute, navController) },
         floatingActionButton = {
             if (currentRoute != Routes.MANAGEMENT) {
@@ -65,6 +90,24 @@ fun MainAppScreen(mainViewModel: MainViewModel, authViewModel: JWTAuthViewModel)
     ) { innerPadding ->
         // --- GLOBAL DIALOGS ---
         // Placing these here once ensures they don't reset during navigation
+        if (showUpdateProfileDialog) {
+            UpdateProfileDialog(
+                viewModel = authViewModel,
+                onDismiss = { showUpdateProfileDialog = false }
+            )
+        }
+
+        if (showChangePasswordDialog) {
+            LaunchedEffect(Unit) { authViewModel.clearLoginState() }
+
+            ChangePasswordDialog(
+                viewModel = authViewModel,
+                onDismiss = {
+                    showChangePasswordDialog = false
+                    authViewModel.clearLoginState()
+                }
+            )
+        }
         if (showPersonDialog) {
             AddPersonDialog(
                 viewModel = mainViewModel,
@@ -164,6 +207,17 @@ fun MainAppScreen(mainViewModel: MainViewModel, authViewModel: JWTAuthViewModel)
                     Box(modifier = Modifier.padding(innerPadding)) {
                         ManagementScreen(mainViewModel)
                     }
+                }
+                composable(Routes.PROFILE) {
+                    ProfileScreen(
+                        viewModel = authViewModel,
+                        onAccountDeleted = {
+                            navController.navigate(Routes.AUTH) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        },
+                        onBack = { navController.popBackStack() }
+                    )
                 }
             }
         }

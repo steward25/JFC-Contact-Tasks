@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.DropdownMenu
@@ -40,14 +42,22 @@ import com.stewardapostol.jfc.ui.viewmodel.JWTAuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopHeaderBar(authViewModel: JWTAuthViewModel) {
+fun TopHeaderBar(
+    authViewModel: JWTAuthViewModel,
+    onLogout: () -> Unit,
+    onUpdateProfile: () -> Unit,
+    onChangePassword: () -> Unit
+) {
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
 
+    // Extract first name from Firebase Display Name
+    val fullName = authViewModel.currentUserName ?: "User"
+    val firstName = fullName.split(" ").firstOrNull() ?: "User"
+
     TopAppBar(
         title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(
                     painter = painterResource(id = R.drawable.jblogo),
                     contentDescription = "App Logo",
@@ -58,33 +68,57 @@ fun TopHeaderBar(authViewModel: JWTAuthViewModel) {
             }
         },
         actions = {
-            Box {
-                IconButton(onClick = { showMenu = true }) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Open Menu"
-                    )
-                }
-                DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Update Profile") },
-                        leadingIcon = { Icon(Icons.Default.Person, null) },
-                        onClick = {
-                            showMenu = false
-                            Toast.makeText(context, "Update Profile Clicked", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Sign Out") },
-                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, null) },
-                        onClick = {
-                            showMenu = false
-                            Toast.makeText(context, "Signed Out", Toast.LENGTH_SHORT).show()
-                        }
-                    )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(end = 4.dp)
+            ) {
+                // Display the First Name
+                Text(
+                    text = "Hi, $firstName",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.White,
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+
+                Box {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Open Menu"
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Update Profile") },
+                            leadingIcon = { Icon(Icons.Default.Person, null) },
+                            onClick = {
+                                showMenu = false
+                                onUpdateProfile()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Change Password") },
+                            leadingIcon = { Icon(Icons.Default.Lock, null) },
+                            onClick = {
+                                showMenu = false
+                                onChangePassword()
+                            }
+                        )
+                        HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text("Sign Out") },
+                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, null) },
+                            onClick = {
+                                showMenu = false
+                                authViewModel.logout()
+                                Toast.makeText(context, "Signed Out Successfully", Toast.LENGTH_SHORT).show()
+                                onLogout()
+                            }
+                        )
+                    }
                 }
             }
         },
