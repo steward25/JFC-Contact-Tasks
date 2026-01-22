@@ -1,8 +1,7 @@
-package com.stewardapostol.jfc.ui.auth
+package com.stewardapostol.jfc.ui.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth

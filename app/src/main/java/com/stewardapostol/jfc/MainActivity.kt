@@ -4,38 +4,47 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.stewardapostol.jfc.data.local.AppDatabase
+import com.stewardapostol.jfc.data.repository.AppRepository
 import com.stewardapostol.jfc.ui.auth.AuthScreen
-import com.stewardapostol.jfc.ui.auth.JWTAuthViewModel
+import com.stewardapostol.jfc.ui.viewmodel.JWTAuthViewModel
 import com.stewardapostol.jfc.ui.navigation.Routes
+import com.stewardapostol.jfc.ui.screen.MainAppScreen
 import com.stewardapostol.jfc.ui.theme.JFCContactAndTasksTheme
+import com.stewardapostol.jfc.ui.viewmodel.MainViewModel
+import com.stewardapostol.jfc.ui.viewmodel.MainViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
     lateinit var authViewModel : JWTAuthViewModel
+    lateinit var mainViewModel: MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        val db = AppDatabase.getDatabase(applicationContext)
+        val repository = AppRepository(db.appDao())
+
         setContent {
             JFCContactAndTasksTheme {
-                authViewModel =
-                    androidx.lifecycle.viewmodel.compose.viewModel(factory = object :
-                        ViewModelProvider.Factory {
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            return JWTAuthViewModel(application) as T
-                        }
-                    })
+                // Initialize Auth ViewModel
+                authViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return JWTAuthViewModel(application) as T
+                    }
+                })
+
+                // 2. Initialize the MainViewModel using the factory we created earlier
+                mainViewModel = viewModel(factory = MainViewModelFactory(repository))
+
                 val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
                 val navController = rememberNavController()
 
@@ -48,11 +57,11 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     composable(Routes.MANAGEMENT) {
-                        Text(modifier = Modifier.background(Color.Red),
-                            text = "Weather screen")
+                        MainAppScreen(viewModel = mainViewModel)
                     }
                 }
             }
         }
     }
+
 }

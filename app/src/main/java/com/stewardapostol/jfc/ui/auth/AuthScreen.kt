@@ -44,6 +44,7 @@ import androidx.compose.material3.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.VisualTransformation
 import com.stewardapostol.jfc.R
+import com.stewardapostol.jfc.ui.viewmodel.JWTAuthViewModel
 
 @Composable
 fun AuthScreen(viewModel: JWTAuthViewModel, onLoginSuccess: () -> Unit) {
