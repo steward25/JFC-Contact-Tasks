@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     composable(Routes.MANAGEMENT) {
-                        MainAppScreen(viewModel = mainViewModel)
+                        MainAppScreen(mainViewModel = mainViewModel, authViewModel = authViewModel)
                     }
                 }
             }

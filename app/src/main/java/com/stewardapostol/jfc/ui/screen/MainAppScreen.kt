@@ -1,81 +1,170 @@
 package com.stewardapostol.jfc.ui.screen
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.stewardapostol.jfc.data.local.BusinessWithDetails
+import com.stewardapostol.jfc.data.local.PersonWithDetails
+import com.stewardapostol.jfc.ui.navigation.Routes
+import com.stewardapostol.jfc.ui.viewmodel.JWTAuthViewModel
 import com.stewardapostol.jfc.ui.viewmodel.MainViewModel
 
 @Composable
-fun MainAppScreen(viewModel: MainViewModel) {
+fun MainAppScreen(mainViewModel: MainViewModel, authViewModel: JWTAuthViewModel) {
     val navController = rememberNavController()
-
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    selected = currentRoute == "tasks",
-                    onClick = { navController.navigate("tasks") },
-                    icon = { Icon(Icons.Default.CheckCircle, contentDescription = null) },
-                    label = { Text("Tasks") }
-                )
-                NavigationBarItem(
-                    selected = currentRoute == "businesses",
-                    onClick = { navController.navigate("businesses") },
-                    icon = { Icon(Icons.Default.Business, contentDescription = null) },
-                    label = { Text("Businesses") }
-                )
-                NavigationBarItem(
-                    selected = currentRoute == "people",
-                    onClick = { navController.navigate("people") },
-                    icon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    label = { Text("People") })
+    var showFabMenu by remember { mutableStateOf(false) }
+    var showPersonDialog by remember { mutableStateOf(false) }
+    var personToEdit by remember { mutableStateOf<PersonWithDetails?>(null) }
 
-                NavigationBarItem(
-                    selected = currentRoute == "management",
-                    onClick = { navController.navigate("management") },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                    label = { Text("Manage") }
+    var showBusinessDialog by remember { mutableStateOf(false) }
+    var businessToEdit by remember { mutableStateOf<BusinessWithDetails?>(null) }
+
+    var showTaskDialog by remember { mutableStateOf(false) }
+
+    Scaffold(
+        topBar = { TopHeaderBar(authViewModel) },
+        bottomBar = { BottomBar(currentRoute, navController) },
+        floatingActionButton = {
+            if (currentRoute != Routes.MANAGEMENT) {
+                FloatingActionMenu(
+                    isMenuExpanded = showFabMenu,
+                    onToggleMenu = { showFabMenu = !showFabMenu },
+                    onPersonClick = {
+                        showPersonDialog = true
+                        showFabMenu = false
+                    },
+                    onBusinessClick = {
+                        businessToEdit = null
+                        showBusinessDialog = true
+                        showFabMenu = false
+                    },
+                    onTaskClick = {
+                        showTaskDialog = true
+                        showFabMenu = false
+                    }
                 )
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = "tasks",
-            modifier = Modifier.padding(innerPadding)
+        // --- GLOBAL DIALOGS ---
+        // Placing these here once ensures they don't reset during navigation
+        if (showPersonDialog) {
+            AddPersonDialog(
+                viewModel = mainViewModel,
+                existingPerson = personToEdit,
+                onDismiss = {
+                    showPersonDialog = false
+                    personToEdit = null
+
+                    // REMOVE the 'if' check. If it's already there, launchSingleTop handles it.
+                    navController.navigate(Routes.PEOPLE) {
+                        popUpTo(Routes.TASKS) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
+
+        if (showBusinessDialog) {
+            AddBusinessDialog(
+                viewModel = mainViewModel,
+                existingBusiness = businessToEdit,
+                onDismiss = {
+                    showBusinessDialog = false
+                    businessToEdit = null
+
+                    navController.navigate(Routes.BUSINESSES) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
+        if (showTaskDialog) {
+            AddTaskDialog(
+                viewModel = mainViewModel,
+                onDismiss = { showTaskDialog = false }
+            )
+        }
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            composable("tasks") {
-                TaskTabScreen(viewModel, onAddTask = { /* Navigate to Add Task */ })
-            }
-            composable("businesses") {
-                // Replace with your BusinessListScreen when ready
-                Text("Business List Coming Soon", modifier = Modifier.padding(16.dp))
-            }
-            composable("people") {
-                // Replace with your PeopleListScreen when ready
-                Text("People List Coming Soon", modifier = Modifier.padding(16.dp))
-            }
-            composable("management") {
-                ManagementScreen(viewModel = viewModel)
+            NavHost(
+                navController = navController,
+                startDestination = Routes.TASKS,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                composable(Routes.TASKS) {
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        TaskTabScreen(
+                            viewModel = mainViewModel,
+                            navController = navController,
+                        )
+                    }
+                }
+                composable(
+                    route = "task_details/{taskId}",
+                    arguments = listOf(navArgument("taskId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val taskId = backStackEntry.arguments?.getLong("taskId") ?: 0L
+                    TaskDetailsScreen(
+                        taskId = taskId,
+                        viewModel = mainViewModel,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+                composable(Routes.BUSINESSES) {
+                    // Apply padding ONLY to the list so it doesn't hide behind the bars
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        BusinessListScreen(
+                            viewModel = mainViewModel,
+                            onEditBusiness = { detail ->
+                                businessToEdit = detail
+                                showBusinessDialog = true
+                            }
+                        )
+                    }
+                }
+                composable(Routes.PEOPLE) {
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        PeopleListScreen(
+                            viewModel = mainViewModel,
+                            onEditPerson = { detail ->
+                                personToEdit = detail
+                                showPersonDialog = true
+                            }
+                        )
+                    }
+                }
+
+                composable(Routes.MANAGEMENT) {
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        ManagementScreen(mainViewModel)
+                    }
+                }
             }
         }
     }

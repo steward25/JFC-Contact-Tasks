@@ -3,12 +3,15 @@ package com.stewardapostol.jfc.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stewardapostol.jfc.data.local.Business
+import com.stewardapostol.jfc.data.local.BusinessWithDetails
 import com.stewardapostol.jfc.data.local.Category
 import com.stewardapostol.jfc.data.local.Person
+import com.stewardapostol.jfc.data.local.PersonWithDetails
 import com.stewardapostol.jfc.data.local.Tag
 import com.stewardapostol.jfc.data.local.Task
 import com.stewardapostol.jfc.data.local.TaskWithNames
 import com.stewardapostol.jfc.data.repository.AppRepository
+import com.stewardapostol.jfc.ui.utils.ColorGenerator
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -16,7 +19,11 @@ import kotlinx.coroutines.launch
 
 class  MainViewModel(private val repository: AppRepository) : ViewModel() {
 
-    // --- 1. TASK STATE & ACTIONS ---
+
+    // Observe the detailed list for the UI
+    val peopleList: StateFlow<List<PersonWithDetails>> = repository.allPeopleWithDetails
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // Streams for the Open and Completed Task lists
     val openTasks: StateFlow<List<TaskWithNames>> = repository.getOpenTasks()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -38,10 +45,11 @@ class  MainViewModel(private val repository: AppRepository) : ViewModel() {
             repository.saveTask(task)
         }
     }
+
     val completedTasks: StateFlow<List<TaskWithNames>> = repository.getCompletedTasks()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun onToggleTaskStatus(task: TaskWithNames) {
+    fun onToggleTaskStatusWithNames(task: TaskWithNames) {
         viewModelScope.launch {
             // Checks current status and flips it
             val isOpen = task.task.status == "Open"
@@ -61,13 +69,24 @@ class  MainViewModel(private val repository: AppRepository) : ViewModel() {
     val allBusinesses: StateFlow<List<Business>> = repository.allBusinesses
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val allBusinessesWithDetails: StateFlow<List<BusinessWithDetails>> =
+        repository.allBusinessesWithDetails
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
     val allCategories: StateFlow<List<Category>> = repository.allCategories
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun onSaveBusiness(name: String, email: String?, categoryIds: List<Long>) {
+    // Updated to accept the business object to preserve the ID during Edits
+    fun onSaveBusiness(business: Business, categories: List<Category>, tags: List<Tag>) {
         viewModelScope.launch {
-            val business = Business(name = name, email = email)
-            repository.saveBusiness(business, categoryIds)
+            val categoryIds = categories.map { it.categoryId }
+            val tagIds = tags.map { it.tagId }
+
+            // This call handles both Update (if ID > 0) and Insert (if ID is 0)
+            repository.insertBusinessWithRelations(business, categoryIds, tagIds)
         }
     }
 
@@ -78,29 +97,45 @@ class  MainViewModel(private val repository: AppRepository) : ViewModel() {
     }
 
     // --- 3. PERSON STATE & ACTIONS ---
+
+    val allPeopleWithDetails: StateFlow<List<PersonWithDetails>> =
+        repository.allPeopleWithDetails
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
     val allPeople: StateFlow<List<Person>> = repository.allPeople
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val allTags: StateFlow<List<Tag>> = repository.allTags
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun onSavePerson(firstName: String, lastName: String, businessId: Long?, tagIds: List<Long>) {
+    // MainViewModel.kt
+    val allTasks: StateFlow<List<TaskWithNames>> = repository.allTasks
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    fun onToggleTaskStatus(task: Task) {
         viewModelScope.launch {
-            val person = Person(
-                firstName = firstName, 
-                lastName = lastName, 
-                businessId = businessId
-            )
-            repository.savePerson(person, tagIds)
+            val newStatus = if (task.status == "Open") "Completed" else "Open"
+            repository.updateTask(task.copy(status = newStatus))
         }
     }
-
-    fun onDeletePerson(person: Person) {
+    fun onSavePerson(person: Person, tags: List<Tag>) {
         viewModelScope.launch {
-            repository.deletePerson(person)
+            val tagIds = tags.map { it.tagId }
+            repository.savePersonWithTags(person, tagIds)
         }
     }
-
+    fun onDeletePerson(personId: Long) {
+        viewModelScope.launch {
+            repository.onDeletePerson(personId)
+        }
+    }
     // --- 4. MANAGEMENT (SETTINGS) ACTIONS ---
     fun onAddCategory(name: String, onDuplicate: () -> Unit, onSuccess: () -> Unit) {
         // Case-insensitive check
@@ -117,7 +152,13 @@ class  MainViewModel(private val repository: AppRepository) : ViewModel() {
     }
 
     fun onAddTag(name: String) {
-        viewModelScope.launch { repository.addTag(name) }
+        viewModelScope.launch {
+            val newTag = Tag(
+                tagName = name,
+                color = ColorGenerator.getRandomColor()
+            )
+            repository.insertTag(newTag)
+        }
     }
 
     fun onUpdateCategory(category: Category) {
