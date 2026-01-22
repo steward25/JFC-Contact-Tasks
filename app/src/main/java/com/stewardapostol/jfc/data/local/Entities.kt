@@ -15,11 +15,24 @@ data class Business(
     val email: String? = null
 )
 
-@Entity(tableName = "people")
+@Entity(
+    tableName = "people",
+    foreignKeys = [
+        ForeignKey(
+            entity = Business::class,
+            parentColumns = ["businessId"],
+            childColumns = ["businessId"],
+            onDelete = ForeignKey.SET_NULL
+        )
+    ],
+    indices = [Index("businessId")] // Indexing foreign keys improves database performance
+)
 data class Person(
     @PrimaryKey(autoGenerate = true) val personId: Long = 0,
     val firstName: String,
     val lastName: String,
+    val email: String,
+    val phoneNumber: String,
     val businessId: Long? = null
 )
 
@@ -47,13 +60,11 @@ data class Category(
     @PrimaryKey(autoGenerate = true) val categoryId: Long = 0,
     val categoryName: String
 )
-@Entity(
-    tableName = "tags",
-    indices = [Index(value = ["tagName"], unique = true)]
-)
+@Entity(tableName = "tags")
 data class Tag(
     @PrimaryKey(autoGenerate = true) val tagId: Long = 0,
-    val tagName: String
+    val tagName: String,
+    val color: Int = 0xFF7F7F7F.toInt()
 )
 
 @Entity(

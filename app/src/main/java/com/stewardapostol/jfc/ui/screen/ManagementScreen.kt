@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.stewardapostol.jfc.data.local.Category
 import com.stewardapostol.jfc.data.local.Tag
+import com.stewardapostol.jfc.ui.navigation.Routes
 import com.stewardapostol.jfc.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
@@ -61,14 +62,12 @@ fun ManagementScreen(viewModel: MainViewModel) {
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Text("Management Settings", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(24.dp))
-
         // --- Categories Section ---
         ManagementSectionWithData(
-            title = "Business Categories",
+            title = Routes.BusinessCategories,
             items = categories,
             labelProvider = { it.categoryName },
+            colorProvider =  null ,
             onAddClick = { showCategoryDialog = true },
             onItemClick = { editingCategory = it },
             onDeleteClick = { deletingCategory = it }
@@ -78,9 +77,10 @@ fun ManagementScreen(viewModel: MainViewModel) {
 
         // --- Tags Section ---
         ManagementSectionWithData(
-            title = "Tags",
+            title =  Routes.TAGS,
             items = tags,
             labelProvider = { it.tagName },
+            colorProvider = { it.color },
             onAddClick = { showTagDialog = true },
             onItemClick = { editingTag = it },
             onDeleteClick = { deletingTag = it }

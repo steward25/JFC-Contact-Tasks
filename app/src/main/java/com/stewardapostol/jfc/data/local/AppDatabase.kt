@@ -14,19 +14,30 @@ import androidx.room.RoomDatabase
         Tag::class,
         BusinessCategoryCrossRef::class,
         BusinessTagCrossRef::class,
-        PersonTagCrossRef::class
+        PersonTagCrossRef::class // Ensure this matches your latest data class name
     ],
-    version = 1,
+    version = 3, // Increment version from 1 to 2
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun appDao(): AppDao
-    
+
     companion object {
-        @Volatile private var INSTANCE: AppDatabase? = null
-        fun getDatabase(context: Context): AppDatabase = INSTANCE ?: synchronized(this) {
-            Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, "app_db").build().also { INSTANCE = it }
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+
+        fun getDatabase(context: Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "app_db"
+                )
+                    .fallbackToDestructiveMigration() // Recommended during development
+                    .build()
+                INSTANCE = instance
+                instance
+            }
         }
     }
 }
-
