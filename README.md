@@ -22,7 +22,7 @@ This PR implements the complete Authentication module for the JFC Contact and Ta
   -   State Management: Uses StateFlow in JWTAuthViewModel to handle loading, login success, and error messages.
   -   Security: Ensures the idToken is refreshed and valid before allowing navigation to the main screen.
   -   Dependencies: Added material-icons-extended for visibility icons.
-
+### APK :  [jfc-contact-task.apk](https://github.com/steward25/JFC-Contact-Tasks/releases/download/v1.0.0/jfc-contact-task-v1.0.0.apk)
 ### **Screenshots/Recordings**
 |JWT Provider|
 |-----|
