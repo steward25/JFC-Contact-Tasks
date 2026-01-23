@@ -24,14 +24,14 @@ This PR implements the complete Authentication module for the JFC Contact and Ta
   -   Dependencies: Added material-icons-extended for visibility icons.
 
 ### **Screenshots/Recordings**
-### **Screenshots/Recordings**
 |JWT Provider|
 |-----|
 |<img width="1693" height="645" alt="Screenshot 2026-01-22 003415" src="https://github.com/user-attachments/assets/61f5303a-09cc-4d63-8a8e-59ac93edb373" />|
 
-|Register|Login|
-|-----|-----|
-|<img width="300" height="2553" alt="Screenshot_20260123_064704" src="https://github.com/user-attachments/assets/7675543b-f1f6-4ca3-b345-d5c74b491126" />|<img width="300" height="2553" alt="Screenshot_20260123_064547" src="https://github.com/user-attachments/assets/91fb7c17-103a-4890-92ef-b2cf3411a8da" />|
+|Register|Login| Forgot Password |
+|-----|-----|-----|
+|<img width="300" height="2553" alt="Screenshot_20260123_064704" src="https://github.com/user-attachments/assets/7675543b-f1f6-4ca3-b345-d5c74b491126" />|<img width="300" height="2553" alt="Screenshot_20260123_064547" src="https://github.com/user-attachments/assets/91fb7c17-103a-4890-92ef-b2cf3411a8da" />|<img width="600" height="710" alt="Screenshot 2026-01-23 094801" src="https://github.com/user-attachments/assets/ff385977-0323-4b1f-9ee5-dede436adbee" />|
+
 
 Main Pages
 |Tasks|Businesses| People|Management|
