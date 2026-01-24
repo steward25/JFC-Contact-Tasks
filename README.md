@@ -1,9 +1,15 @@
-###  **Description**
+###  JFC Contact and Tasks App
+The JFC Contact and Tasks App is a centralized management system designed to handle professional networking and task tracking. Built with 100% Kotlin and Jetpack Compose, the application follows Clean Architecture principles and the MVVM pattern to ensure a scalable, testable, and maintainable codebase.
 
-This PR implements the complete Authentication module for the JFC Contact and Tasks app. It transitions the UI from a generic blue theme to a Jollibee-inspired branding and adds critical security features like JWT retrieval and Password Reset.
+**Core Functionalities**
+- Entity Management: Full CRUD (Create, Read, Update, Delete) operations for Businesses and People.
+- Relationship Mapping: * Businesses can be categorized into one or more Categories.
+- People can be associated with exactly one Business.
+- Organization: Both People and Businesses support Tags for easy filtering.
+- Task Management: Integrated task assignment for both People and Businesses, including a centralized Assigned Tasks View.
+- Access Control: All users have global access to view all Businesses and People.
 
-
-**Key Changes**
+**Authentication & Branding (PR)**
 
   - Authentication Logic:
     -   Integrated Firebase createUserWithEmailAndPassword and signInWithEmailAndPassword.
@@ -17,6 +23,12 @@ This PR implements the complete Authentication module for the JFC Contact and Ta
     -   Visual Feedback: Integrated a CircularProgressIndicator and password visibility toggles.
   
   - Documentation: Added a comprehensive README.md with setup instructions and tech stack details.
+
+**Core Stack**
+- Language: 100% Kotlin
+- UI Framework: Jetpack Compose (Declarative UI)
+- Authentication: Firebase Auth + JWT (JSON Web Tokens)
+- Architecture: MVVM (Model-View-ViewModel) with StateFlow
 
 **Technical Details**
   -   State Management: Uses StateFlow in JWTAuthViewModel to handle loading, login success, and error messages.
